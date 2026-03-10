@@ -9,8 +9,8 @@
 # required_version: 2.7.0
 
 enabled_site_setting :redirect_on_forbidden_enabled
-add_admin_route "redirect_on_forbidden.admin.title", "redirect-on-forbidden"
 register_asset "stylesheets/redirect-on-forbidden.scss"
+add_admin_route "redirect_on_forbidden.admin.title", "redirect-on-forbidden"
 
 module ::RedirectOnForbidden
   PLUGIN_NAME = "discourse-redirect-on-forbidden"
