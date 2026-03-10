@@ -49,7 +49,8 @@ after_initialize do
             topic_slug = topic.slug
           end
         elsif params[:category_id] || (params[:controller] == "categories")
-          category_id = params[:category_id] || params[:id]
+          category_id = (params[:category_id] || params[:id]).to_i
+          category_id = nil if category_id == 0
         elsif params[:category_slug_path_with_id]
           parts = params[:category_slug_path_with_id].split("/")
           category_id = parts.last.to_i
