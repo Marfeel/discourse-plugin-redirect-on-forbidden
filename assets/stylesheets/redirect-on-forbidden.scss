@@ -1,0 +1,39 @@
+.redirect-on-forbidden-admin {
+  .redirect-rules-table {
+    width: 100%;
+    margin-bottom: 1em;
+
+    th,
+    td {
+      padding: 0.5em;
+      text-align: left;
+      border-bottom: 1px solid var(--primary-low);
+    }
+  }
+
+  .redirect-rule-editor {
+    padding: 1em;
+    margin: 1em 0;
+    border: 1px solid var(--primary-low);
+    border-radius: 4px;
+
+    .rule-field {
+      margin-bottom: 1em;
+
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.25em;
+      }
+
+      .rule-url-input {
+        width: 100%;
+      }
+    }
+
+    .rule-actions {
+      display: flex;
+      gap: 0.5em;
+    }
+  }
+}

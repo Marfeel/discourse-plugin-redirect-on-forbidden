@@ -1,0 +1,17 @@
+en:
+  js:
+    redirect_on_forbidden:
+      title: "Redirect on Forbidden"
+      description: "Manage redirect rules for forbidden categories"
+      add_rule: "Add Rule"
+      edit_rule: "Edit Rule"
+      url_pattern: "URL Pattern"
+      url_pattern_hint: "e.g. https://example.com/{category}/{subcategory}/{slug}"
+      categories: "Categories"
+      no_rules: "No redirect rules configured yet."
+      save: "Save"
+      cancel: "Cancel"
+      delete: "Delete"
+      confirm_delete: "Are you sure you want to delete this rule?"
+      errors:
+        duplicate_category: "One or more categories are already used in another rule"
