@@ -1,3 +1,6 @@
 en:
   site_settings:
     redirect_on_forbidden_enabled: "Enable the Redirect on Forbidden plugin"
+  redirect_on_forbidden:
+    admin:
+      title: "Redirect on Forbidden"
