@@ -17,6 +17,16 @@ end
 require_relative "lib/redirect_on_forbidden/engine"
 
 after_initialize do
+  add_to_serializer(
+    :site,
+    :redirect_on_forbidden_rules,
+    include_condition: -> { SiteSetting.redirect_on_forbidden_enabled },
+  ) do
+    RedirectOnForbidden::RedirectRule.all.map do |rule|
+      { category_ids: rule.category_ids, url_pattern: rule.url_pattern }
+    end
+  end
+
   on(:site_setting_changed) do |name, _old, _new|
     if name == :redirect_on_forbidden_enabled
       RedirectOnForbidden::RedirectRule.reset_cache!
