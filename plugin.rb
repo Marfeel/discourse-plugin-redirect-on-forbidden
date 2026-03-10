@@ -24,7 +24,7 @@ after_initialize do
     :redirect_on_forbidden_rules,
     include_condition: -> { SiteSetting.redirect_on_forbidden_enabled },
   ) do
-    RedirectOnForbidden::RedirectRule.all.map do |rule|
+    RedirectOnForbidden::RedirectRule.cached_rules.map do |rule|
       { category_ids: rule.category_ids, url_pattern: rule.url_pattern }
     end
   end

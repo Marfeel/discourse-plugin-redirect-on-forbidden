@@ -11,8 +11,16 @@ module ::RedirectOnForbidden
 
     ALLOWED_PLACEHOLDERS = %w[{category} {subcategory} {slug}].freeze
 
+    def self.cached_rules
+      @cached_rules ||= all.to_a
+    end
+
+    def self.reset_cache!
+      @cached_rules = nil
+    end
+
     def self.find_by_category(category_id)
-      where("? = ANY(category_ids)", category_id).first
+      cached_rules.find { |r| r.category_ids.include?(category_id) }
     end
 
     def build_redirect_url(category:, subcategory: nil, slug: nil)
