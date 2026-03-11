@@ -1,0 +1,4 @@
+redirect_on_forbidden:
+  redirect_on_forbidden_enabled:
+    default: false
+    client: true

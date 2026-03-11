@@ -1,0 +1,8 @@
+en:
+  site_settings:
+    categories:
+      redirect_on_forbidden: "Redirect on Forbidden"
+    redirect_on_forbidden_enabled: "Enable the Redirect on Forbidden plugin. Requires 'detailed 404' to be enabled for anonymous user redirects."
+  redirect_on_forbidden:
+    admin:
+      title: "Redirect on Forbidden"
