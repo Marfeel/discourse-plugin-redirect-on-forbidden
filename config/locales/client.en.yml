@@ -1,13 +1,22 @@
 en:
-  js:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          redirect_on_forbidden: "Redirect on Forbidden"
     redirect_on_forbidden:
       title: "Redirect on Forbidden"
+      admin:
+        title: "Redirect on Forbidden"
       description: "Manage redirect rules for forbidden categories"
+      detailed_404_warning: "Warning: The 'detailed 404' site setting is disabled. Redirects will not work for anonymous users until it is enabled."
       add_rule: "Add Rule"
       edit_rule: "Edit Rule"
       url_pattern: "URL Pattern"
       url_pattern_hint: "e.g. https://example.com/{category}/{subcategory}/{slug}"
       categories: "Categories"
+      categories_hint: "Leave empty to apply to all categories (fallback rule)"
+      all_categories: "All categories (fallback)"
       no_rules: "No redirect rules configured yet."
       save: "Save"
       cancel: "Cancel"
@@ -15,3 +24,8 @@ en:
       confirm_delete: "Are you sure you want to delete this rule?"
       errors:
         duplicate_category: "One or more categories are already used in another rule"
+  js:
+    redirect_on_forbidden:
+      title: "Redirect on Forbidden"
+      admin:
+        title: "Redirect on Forbidden"

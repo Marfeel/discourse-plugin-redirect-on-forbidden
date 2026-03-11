@@ -7,7 +7,10 @@ module ::RedirectOnForbidden
 
     def index
       rules = RedirectRule.all.order(:id)
-      render json: { rules: serialize_rules(rules) }
+      render json: {
+        rules: serialize_rules(rules),
+        detailed_404: SiteSetting.detailed_404,
+      }
     end
 
     def create

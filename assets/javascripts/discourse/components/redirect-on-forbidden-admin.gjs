@@ -3,6 +3,7 @@ import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
 import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
+import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import CategorySelector from "select-kit/components/category-selector";
 import { ajax } from "discourse/lib/ajax";
@@ -11,7 +12,21 @@ import { i18n } from "discourse-i18n";
 
 const API_BASE = "/admin/plugins/redirect-on-forbidden/rules";
 
+function categoryNames(categoryIds, site) {
+  if (!site?.categories) {
+    return categoryIds.join(", ");
+  }
+  return categoryIds
+    .map((id) => {
+      const cat = site.categories.find((c) => c.id === id);
+      return cat ? cat.name : `#${id}`;
+    })
+    .join(", ");
+}
+
 class RuleEditor extends Component {
+  @service site;
+
   @tracked urlPattern = this.args.rule?.url_pattern || "";
   @tracked selectedCategories = this.resolveInitialCategories();
 
@@ -20,8 +35,8 @@ class RuleEditor extends Component {
     if (!categoryIds.length) {
       return [];
     }
-    const site = window.Discourse?.Site?.current();
-    if (!site) {
+    const site = this.site;
+    if (!site?.categories) {
       return [];
     }
     return categoryIds
@@ -56,6 +71,7 @@ class RuleEditor extends Component {
           @categories={{this.selectedCategories}}
           @onChange={{this.updateCategories}}
         />
+        <span class="rule-field-hint">{{i18n "redirect_on_forbidden.categories_hint"}}</span>
       </div>
       <div class="rule-field">
         <label>{{i18n "redirect_on_forbidden.url_pattern"}}</label>
@@ -84,31 +100,26 @@ class RuleEditor extends Component {
 }
 
 export default class RedirectOnForbiddenAdmin extends Component {
-  @tracked rules = this.args.model || [];
+  @service site;
+
+  @tracked rules = this.args.model?.rules || [];
   @tracked editingRule = null;
   @tracked isAdding = false;
 
-  get site() {
-    return this.args.site || window.Discourse?.Site?.current();
+  get detailed404Missing() {
+    return !this.args.model?.detailed404;
   }
 
   isEditing = (rule) => {
     return this.editingRule?.id === rule.id;
   };
 
-  categoryNamesForRule(rule) {
-    const site = this.site;
-    if (!site) {
-      return rule.category_ids.join(", ");
+  getCategoryNames = (rule) => {
+    if (!rule.category_ids?.length) {
+      return i18n("redirect_on_forbidden.all_categories");
     }
-    const categories = site.categories || [];
-    return rule.category_ids
-      .map((id) => {
-        const cat = categories.find((c) => c.id === id);
-        return cat ? cat.name : `#${id}`;
-      })
-      .join(", ");
-  }
+    return categoryNames(rule.category_ids, this.site);
+  };
 
   @action
   startAdd() {
@@ -176,6 +187,12 @@ export default class RedirectOnForbiddenAdmin extends Component {
       <h2>{{i18n "redirect_on_forbidden.title"}}</h2>
       <p>{{i18n "redirect_on_forbidden.description"}}</p>
 
+      {{#if this.detailed404Missing}}
+        <div class="alert alert-warning redirect-on-forbidden-warning">
+          {{i18n "redirect_on_forbidden.detailed_404_warning"}}
+        </div>
+      {{/if}}
+
       {{#if this.rules.length}}
         <table class="redirect-rules-table">
           <thead>
@@ -197,7 +214,7 @@ export default class RedirectOnForbiddenAdmin extends Component {
                     />
                   </td>
                 {{else}}
-                  <td>{{this.categoryNamesForRule rule}}</td>
+                  <td>{{this.getCategoryNames rule}}</td>
                   <td>{{rule.url_pattern}}</td>
                   <td>
                     <DButton

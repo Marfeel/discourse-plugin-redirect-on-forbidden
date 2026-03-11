@@ -3,6 +3,8 @@
 require "rails_helper"
 
 RSpec.describe RedirectOnForbidden::RedirectRule do
+  after { described_class.reset_cache! }
+
   describe "validations" do
     it "requires url_pattern" do
       rule = described_class.new(category_ids: [1])
@@ -16,10 +18,16 @@ RSpec.describe RedirectOnForbidden::RedirectRule do
       expect(rule.errors[:url_pattern]).to be_present
     end
 
-    it "requires category_ids" do
-      rule = described_class.new(url_pattern: "https://example.com/{slug}")
+    it "allows empty category_ids as a fallback rule" do
+      rule = described_class.new(category_ids: [], url_pattern: "https://example.com/{slug}")
+      expect(rule).to be_valid
+    end
+
+    it "rejects a second fallback rule" do
+      described_class.create!(category_ids: [], url_pattern: "https://example.com/{slug}")
+      rule = described_class.new(category_ids: [], url_pattern: "https://other.com/{slug}")
       expect(rule).not_to be_valid
-      expect(rule.errors[:category_ids]).to include("can't be blank")
+      expect(rule.errors[:category_ids]).to include(a_string_matching("fallback"))
     end
 
     it "rejects unknown placeholders" do
@@ -49,13 +57,29 @@ RSpec.describe RedirectOnForbidden::RedirectRule do
   describe ".find_by_category" do
     it "returns the rule matching the category ID" do
       rule = described_class.create!(category_ids: [5, 12], url_pattern: "https://example.com/{slug}")
+      described_class.reset_cache!
       expect(described_class.find_by_category(5)).to eq(rule)
       expect(described_class.find_by_category(12)).to eq(rule)
     end
 
     it "returns nil when no rule matches" do
       described_class.create!(category_ids: [5], url_pattern: "https://example.com/{slug}")
+      described_class.reset_cache!
       expect(described_class.find_by_category(99)).to be_nil
+    end
+
+    it "returns the fallback rule when no specific rule matches" do
+      described_class.create!(category_ids: [5], url_pattern: "https://example.com/{slug}")
+      fallback = described_class.create!(category_ids: [], url_pattern: "https://fallback.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(99)).to eq(fallback)
+    end
+
+    it "prefers a specific rule over the fallback" do
+      specific = described_class.create!(category_ids: [5], url_pattern: "https://example.com/{slug}")
+      described_class.create!(category_ids: [], url_pattern: "https://fallback.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(5)).to eq(specific)
     end
   end
 

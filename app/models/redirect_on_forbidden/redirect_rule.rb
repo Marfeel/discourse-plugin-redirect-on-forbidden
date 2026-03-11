@@ -5,9 +5,9 @@ module ::RedirectOnForbidden
     self.table_name = "redirect_on_forbidden_rules"
 
     validates :url_pattern, presence: true, format: { with: /\Ahttps:\/\// }
-    validates :category_ids, presence: true
     validate :only_known_placeholders
     validate :category_ids_unique_across_rules
+    validate :only_one_fallback_rule
 
     ALLOWED_PLACEHOLDERS = %w[{category} {subcategory} {slug}].freeze
 
@@ -20,7 +20,12 @@ module ::RedirectOnForbidden
     end
 
     def self.find_by_category(category_id)
-      cached_rules.find { |r| r.category_ids.include?(category_id) }
+      cached_rules.find { |r| r.category_ids.present? && r.category_ids.include?(category_id) } ||
+        cached_rules.find { |r| r.category_ids.blank? }
+    end
+
+    def fallback?
+      category_ids.blank?
     end
 
     def build_redirect_url(category:, subcategory: nil, slug: nil)
@@ -46,6 +51,14 @@ module ::RedirectOnForbidden
       unknown = url_pattern.scan(/\{[^}]+\}/) - ALLOWED_PLACEHOLDERS
       if unknown.any?
         errors.add(:url_pattern, "contains unknown placeholders: #{unknown.join(', ')}")
+      end
+    end
+
+    def only_one_fallback_rule
+      return if category_ids.present?
+      existing = self.class.where.not(id: id).where("category_ids = '{}' OR category_ids IS NULL")
+      if existing.exists?
+        errors.add(:category_ids, "a fallback rule already exists")
       end
     end
 
