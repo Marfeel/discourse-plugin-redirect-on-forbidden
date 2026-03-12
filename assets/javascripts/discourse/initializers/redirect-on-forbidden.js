@@ -1,4 +1,5 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
+import $ from "jquery";
 
 export default {
   name: "redirect-on-forbidden",
@@ -10,23 +11,13 @@ export default {
         return;
       }
 
-      api.modifyClass("controller:application", {
-        pluginId: "redirect-on-forbidden",
-
-        actions: {
-          error(error) {
-            if (
-              error?.jqXHR?.status === 403 &&
-              error?.jqXHR?.responseJSON?.redirect_to
-            ) {
-              window.location.replace(
-                error.jqXHR.responseJSON.redirect_to,
-              );
-              return;
-            }
-            return this._super(...arguments);
-          },
-        },
+      $(document).ajaxError((_event, jqXHR) => {
+        if (
+          jqXHR.status === 403 &&
+          jqXHR.responseJSON?.redirect_to
+        ) {
+          window.location.replace(jqXHR.responseJSON.redirect_to);
+        }
       });
     });
   },

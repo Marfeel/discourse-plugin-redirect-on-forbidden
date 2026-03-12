@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# name: discourse-redirect-on-forbidden
+# name: discourse-plugin-redirect-on-forbidden
 # about: Redirects 403 responses to configurable external URLs based on category mapping rules
 # meta_topic_id: TODO
 # version: 0.1.0
@@ -13,7 +13,7 @@ register_asset "stylesheets/redirect-on-forbidden.scss"
 add_admin_route "redirect_on_forbidden.admin.title", "redirect-on-forbidden"
 
 module ::RedirectOnForbidden
-  PLUGIN_NAME = "discourse-redirect-on-forbidden"
+  PLUGIN_NAME ||= "discourse-plugin-redirect-on-forbidden"
 end
 
 require_relative "lib/redirect_on_forbidden/engine"
