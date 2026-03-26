@@ -106,39 +106,3 @@ acceptance("Redirect on Forbidden - Admin UI", function (needs) {
     window.confirm = originalConfirm;
   });
 });
-
-acceptance(
-  "Redirect on Forbidden - XHR Interceptor",
-  function (needs) {
-    needs.user();
-    needs.settings({ redirect_on_forbidden_enabled: true });
-    needs.site({
-      redirect_on_forbidden_rules: [
-        {
-          category_ids: [5],
-          url_pattern: "https://example.com/{category}/{slug}",
-        },
-      ],
-    });
-
-    let replacedUrl = null;
-
-    needs.hooks.beforeEach(() => {
-      replacedUrl = null;
-      sinon.stub(window.location, "replace").callsFake((url) => {
-        replacedUrl = url;
-      });
-    });
-
-    needs.hooks.afterEach(() => {
-      sinon.restore();
-    });
-
-    test("redirects on 403 XHR with redirect_to in response", async function (assert) {
-      assert.true(
-        true,
-        "initializer registered and plugin is active",
-      );
-    });
-  },
-);

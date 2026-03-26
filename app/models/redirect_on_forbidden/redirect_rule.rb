@@ -20,7 +20,13 @@ module ::RedirectOnForbidden
     end
 
     def self.find_by_category(category_id)
-      cached_rules.find { |r| r.category_ids.present? && r.category_ids.include?(category_id) } ||
+      category = Category.find_by(id: category_id)
+      return nil if category.nil?
+
+      ids_to_check = [category_id]
+      ids_to_check << category.parent_category_id if category.parent_category_id.present?
+
+      cached_rules.find { |r| r.category_ids.present? && (r.category_ids & ids_to_check).any? } ||
         cached_rules.find { |r| r.category_ids.blank? }
     end
 

@@ -81,6 +81,33 @@ RSpec.describe RedirectOnForbidden::RedirectRule do
       described_class.reset_cache!
       expect(described_class.find_by_category(5)).to eq(specific)
     end
+
+    it "matches a subcategory via its parent's rule" do
+      parent = Fabricate(:category, slug: "multimedia")
+      sub = Fabricate(:category, slug: "video", parent_category: parent)
+      rule = described_class.create!(category_ids: [parent.id], url_pattern: "https://example.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(sub.id)).to eq(rule)
+    end
+
+    it "does not match a subcategory from an unrelated parent's rule" do
+      multimedia = Fabricate(:category, slug: "multimedia")
+      engagement = Fabricate(:category, slug: "engagement")
+      recirculation = Fabricate(:category, slug: "recirculation", parent_category: engagement)
+      described_class.create!(category_ids: [multimedia.id], url_pattern: "https://example.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(recirculation.id)).to be_nil
+    end
+
+    it "does not match an unrelated subcategory via fallback when another rule exists" do
+      multimedia = Fabricate(:category, slug: "multimedia")
+      engagement = Fabricate(:category, slug: "engagement")
+      recirculation = Fabricate(:category, slug: "recirculation", parent_category: engagement)
+      described_class.create!(category_ids: [multimedia.id], url_pattern: "https://multi.com/{slug}")
+      fallback = described_class.create!(category_ids: [], url_pattern: "https://fallback.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(recirculation.id)).to eq(fallback)
+    end
   end
 
   describe "#build_redirect_url" do
