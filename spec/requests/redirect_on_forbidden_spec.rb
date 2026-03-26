@@ -74,4 +74,26 @@ RSpec.describe "Redirect on Forbidden" do
       expect(response.headers["Location"]).to eq("https://example.com/marketing/events/#{topic.slug}")
     end
   end
+
+  context "when accessing a topic in a subcategory whose parent has a rule" do
+    fab!(:subcategory) { Fabricate(:private_category, group: group, slug: "workshops", parent_category: private_category) }
+    fab!(:sub_topic) { Fabricate(:topic, category: subcategory, slug: "intro-workshop") }
+
+    it "redirects using the parent category's rule" do
+      get "/t/#{sub_topic.slug}/#{sub_topic.id}", headers: { "Accept" => "text/html" }
+      expect(response.status).to eq(301)
+      expect(response.headers["Location"]).to eq("https://example.com/marketing/events/#{sub_topic.slug}")
+    end
+  end
+
+  context "when accessing a topic in an unrelated subcategory" do
+    fab!(:other_parent) { Fabricate(:private_category, group: group, slug: "engagement") }
+    fab!(:other_sub) { Fabricate(:private_category, group: group, slug: "recirculation", parent_category: other_parent) }
+    fab!(:other_topic) { Fabricate(:topic, category: other_sub, slug: "recirc-post") }
+
+    it "does not redirect using a different category's rule" do
+      get "/t/#{other_topic.slug}/#{other_topic.id}", headers: { "Accept" => "text/html" }
+      expect(response.status).to eq(403)
+    end
+  end
 end

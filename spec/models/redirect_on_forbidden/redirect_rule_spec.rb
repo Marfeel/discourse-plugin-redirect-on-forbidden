@@ -55,31 +55,62 @@ RSpec.describe RedirectOnForbidden::RedirectRule do
   end
 
   describe ".find_by_category" do
+    fab!(:cat_a) { Fabricate(:category, slug: "cat-a") }
+    fab!(:cat_b) { Fabricate(:category, slug: "cat-b") }
+    fab!(:cat_other) { Fabricate(:category, slug: "cat-other") }
+
     it "returns the rule matching the category ID" do
-      rule = described_class.create!(category_ids: [5, 12], url_pattern: "https://example.com/{slug}")
+      rule = described_class.create!(category_ids: [cat_a.id, cat_b.id], url_pattern: "https://example.com/{slug}")
       described_class.reset_cache!
-      expect(described_class.find_by_category(5)).to eq(rule)
-      expect(described_class.find_by_category(12)).to eq(rule)
+      expect(described_class.find_by_category(cat_a.id)).to eq(rule)
+      expect(described_class.find_by_category(cat_b.id)).to eq(rule)
     end
 
     it "returns nil when no rule matches" do
-      described_class.create!(category_ids: [5], url_pattern: "https://example.com/{slug}")
+      described_class.create!(category_ids: [cat_a.id], url_pattern: "https://example.com/{slug}")
       described_class.reset_cache!
-      expect(described_class.find_by_category(99)).to be_nil
+      expect(described_class.find_by_category(cat_other.id)).to be_nil
     end
 
     it "returns the fallback rule when no specific rule matches" do
-      described_class.create!(category_ids: [5], url_pattern: "https://example.com/{slug}")
+      described_class.create!(category_ids: [cat_a.id], url_pattern: "https://example.com/{slug}")
       fallback = described_class.create!(category_ids: [], url_pattern: "https://fallback.com/{slug}")
       described_class.reset_cache!
-      expect(described_class.find_by_category(99)).to eq(fallback)
+      expect(described_class.find_by_category(cat_other.id)).to eq(fallback)
     end
 
     it "prefers a specific rule over the fallback" do
-      specific = described_class.create!(category_ids: [5], url_pattern: "https://example.com/{slug}")
+      specific = described_class.create!(category_ids: [cat_a.id], url_pattern: "https://example.com/{slug}")
       described_class.create!(category_ids: [], url_pattern: "https://fallback.com/{slug}")
       described_class.reset_cache!
-      expect(described_class.find_by_category(5)).to eq(specific)
+      expect(described_class.find_by_category(cat_a.id)).to eq(specific)
+    end
+
+    it "matches a subcategory via its parent's rule" do
+      parent = Fabricate(:category, slug: "multimedia")
+      sub = Fabricate(:category, slug: "video", parent_category: parent)
+      rule = described_class.create!(category_ids: [parent.id], url_pattern: "https://example.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(sub.id)).to eq(rule)
+    end
+
+    it "does not match a subcategory from an unrelated parent's rule" do
+      multimedia = Fabricate(:category, slug: "multimedia")
+      engagement = Fabricate(:category, slug: "engagement")
+      recirculation = Fabricate(:category, slug: "recirculation", parent_category: engagement)
+      described_class.create!(category_ids: [multimedia.id], url_pattern: "https://example.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(recirculation.id)).to be_nil
+    end
+
+    it "does not match an unrelated subcategory via fallback when another rule exists" do
+      multimedia = Fabricate(:category, slug: "multimedia")
+      engagement = Fabricate(:category, slug: "engagement")
+      recirculation = Fabricate(:category, slug: "recirculation", parent_category: engagement)
+      described_class.create!(category_ids: [multimedia.id], url_pattern: "https://multi.com/{slug}")
+      fallback = described_class.create!(category_ids: [], url_pattern: "https://fallback.com/{slug}")
+      described_class.reset_cache!
+      expect(described_class.find_by_category(recirculation.id)).to eq(fallback)
     end
   end
 

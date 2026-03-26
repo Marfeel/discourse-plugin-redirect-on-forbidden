@@ -61,5 +61,28 @@ RSpec.describe RedirectOnForbidden::UrlResolver do
       url = described_class.resolve(category_id: deep_category.id)
       expect(url).to be_nil
     end
+
+    it "resolves a subcategory topic via the parent category's rule" do
+      RedirectOnForbidden::RedirectRule.create!(
+        category_ids: [parent_category.id],
+        url_pattern: "https://example.com/{category}/{subcategory}/{slug}",
+      )
+      RedirectOnForbidden::RedirectRule.reset_cache!
+      url = described_class.resolve(category_id: subcategory.id, topic_slug: "my-topic")
+      expect(url).to eq("https://example.com/whatsnew/changelog/my-topic")
+    end
+
+    it "does not resolve across unrelated categories" do
+      multimedia = Fabricate(:category, slug: "multimedia")
+      engagement = Fabricate(:category, slug: "engagement")
+      recirculation = Fabricate(:category, slug: "recirculation", parent_category: engagement)
+      RedirectOnForbidden::RedirectRule.create!(
+        category_ids: [multimedia.id],
+        url_pattern: "https://example.com/{category}/{slug}",
+      )
+      RedirectOnForbidden::RedirectRule.reset_cache!
+      url = described_class.resolve(category_id: recirculation.id, topic_slug: "some-post")
+      expect(url).to be_nil
+    end
   end
 end

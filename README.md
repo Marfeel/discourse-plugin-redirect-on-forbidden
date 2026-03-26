@@ -11,8 +11,8 @@ When users try to access restricted categories or topics they don't have permiss
 - **Category-to-URL mapping** -- Map one or more Discourse categories to an external URL pattern
 - **URL placeholders** -- Use `{category}`, `{subcategory}`, and `{slug}` in URL patterns for dynamic redirects
 - **Fallback rules** -- Create a catch-all rule (empty categories) that applies when no specific rule matches
-- **SEO-friendly** -- Returns 301 redirects for regular page requests
-- **SPA-compatible** -- Returns 403 JSON with a `redirect_to` field for XHR/AJAX requests, allowing the Ember app to handle the redirect client-side
+- **SEO-friendly** -- Returns 301 redirects for HTML page requests
+- **Subcategory inheritance** -- Rules on a parent category automatically apply to all its subcategories
 - **Admin UI** -- Manage rules from Admin > Plugins > Redirect on Forbidden
 - **In-memory caching** -- Rules are cached for fast lookups, automatically invalidated on changes
 
@@ -58,7 +58,7 @@ Each rule has:
 
 | Field | Description |
 |---|---|
-| **Categories** | One or more Discourse categories this rule applies to. Leave empty to create a fallback rule. |
+| **Categories** | One or more Discourse categories this rule applies to. Subcategories automatically inherit their parent's rule. Leave empty to create a fallback rule. |
 | **URL Pattern** | The external URL to redirect to. Supports placeholders. Must start with `https://`. |
 
 ### URL Pattern Placeholders
@@ -106,10 +106,10 @@ The plugin prepends a method on `ApplicationController#rescue_discourse_actions`
 When a 403 is triggered:
 
 1. The plugin extracts the `category_id` and optional `topic_slug` from the request parameters
-2. It looks up a matching redirect rule (specific category match first, then fallback)
+2. It looks up a matching redirect rule -- checking both the category and its parent category for subcategory inheritance (specific match first, then fallback)
 3. It resolves the URL pattern by substituting placeholders with actual category/topic slugs
 4. For **HTML requests**: responds with a `301 redirect` to the external URL
-5. For **XHR/JSON requests**: responds with `403` and a JSON body containing `redirect_to`, allowing the Ember frontend to handle the redirect
+5. For **XHR/JSON requests**: responds with `403` and a JSON body containing `redirect_to` (for API consumers)
 
 ## API
 
