@@ -35,6 +35,10 @@ after_initialize do
     end
   end
 
+  MessageBus.subscribe("/redirect-on-forbidden/cache-reset") do
+    RedirectOnForbidden::RedirectRule.reset_cache!
+  end
+
   reloadable_patch do
     module ::RedirectOnForbidden::ControllerExtension
       def rescue_discourse_actions(type, status_code, opts = nil)

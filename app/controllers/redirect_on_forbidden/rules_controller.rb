@@ -16,7 +16,7 @@ module ::RedirectOnForbidden
     def create
       rule = RedirectRule.new(rule_params)
       if rule.save
-        RedirectRule.reset_cache!
+        RedirectRule.broadcast_cache_reset!
         render json: { rule: serialize_rule(rule) }, status: 201
       else
         render json: { errors: rule.errors.full_messages }, status: 422
@@ -26,7 +26,7 @@ module ::RedirectOnForbidden
     def update
       rule = RedirectRule.find(params[:id])
       if rule.update(rule_params)
-        RedirectRule.reset_cache!
+        RedirectRule.broadcast_cache_reset!
         render json: { rule: serialize_rule(rule) }
       else
         render json: { errors: rule.errors.full_messages }, status: 422
@@ -36,7 +36,7 @@ module ::RedirectOnForbidden
     def destroy
       rule = RedirectRule.find(params[:id])
       rule.destroy!
-      RedirectRule.reset_cache!
+      RedirectRule.broadcast_cache_reset!
       render json: { success: true }
     end
 

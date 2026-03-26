@@ -19,6 +19,11 @@ module ::RedirectOnForbidden
       @cached_rules = nil
     end
 
+    def self.broadcast_cache_reset!
+      reset_cache!
+      MessageBus.publish("/redirect-on-forbidden/cache-reset", { updated_at: Time.now.to_i })
+    end
+
     def self.find_by_category(category_id)
       category = Category.find_by(id: category_id)
       return nil if category.nil?
